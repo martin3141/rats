@@ -58,6 +58,7 @@ if (!exists("sim1") | force_sim1) {
     
     # correct using td method
     td_res <- tdsr(sim_data_1)
+    #td_res <- tdsr(sim_data_1, xlim = c(15, -5))
     
     # create a dataframe of true and estimated shift values for SNR = 5
     if (n == 2) {
@@ -138,6 +139,7 @@ if (!exists("sim2") | force_sim2) {
     
     # correct using td method
     td_res <- tdsr(sim_data_2)
+    #td_res <- tdsr(sim_data_2, xlim = c(15, -5))
     
     rats_freq_sd[n]   <- sd(shifts - rats_res$shifts)
     td_freq_sd[n] <- sd(shifts - td_res$shifts)
@@ -175,6 +177,13 @@ postscript(file.path(fig_dir, "figure2.eps"), width = 6.67, height = 3.5)
 fig2 <- ggarrange(freq, phase, labels = "auto", 
                   font.label = lab_font, ncol = 2)
 print(fig2)
+dev.off()
+
+#lw <- 0.35
+setEPS()
+postscript(file.path(fig_dir, "figure_s1.eps"), width = 6.0, height = 9.0)
+stackplot(get_dyns(sim_data_2, seq(from = 1, to = num_spec, by = 64)),
+          xlim = c(4, 0.5), y_offset = 210)
 dev.off()
 
 ################################################################################
@@ -245,32 +254,96 @@ print(fig3)
 dev.off()
 
 # FIGURE 4
-lw <- 0.025
-tiff(file.path(fig_dir, "figure4.tiff"), width = 1200, height = 500, res = 200, 
-     units = "px")
+lw <- 0.35
+subset <- seq(from = 1, to = 512, length.out = 32)
+setEPS()
+postscript(file.path(fig_dir, "figure4.eps"), width = 6, height = 2.5)
 
-# three part figure
 par(mfrow = c(1, 3))
+stackplot(get_dyns(sim_data_3, subset), xlim = c(4, 0.5), y_offset = 0,
+          restore_def_par = FALSE, lwd = lw)
 
-stackplot(sim_data_3, xlim = c(4, 0.5), y_offset = 0, restore_def_par = FALSE, 
-          lwd = lw)
 mtext("a", at = 4, padj = 0.5, font = 2)
 
-stackplot(td_res$corrected, xlim = c(4, 0.5), y_offset = 0,
+stackplot(get_dyns(td_res$corrected, subset), xlim = c(4, 0.5), y_offset = 0,
           restore_def_par = FALSE, lwd = lw)
+
 mtext("b", at = 4, padj = 0.5, font = 2)
 
-stackplot(rats_res$corrected, xlim = c(4, 0.5), y_offset = 0,
+stackplot(get_dyns(rats_res$corrected, subset), xlim = c(4, 0.5), y_offset = 0,
           restore_def_par = FALSE, lwd = lw)
+
 mtext("c", at = 4, padj = 0.5, font = 2)
 dev.off()
 
-png(file.path(fig_dir, "figure4.png"), width = 1200, height = 500, res = 200,
-    units = "px")
+# moderate baseline issue
+
+num_spec <- 32
+
+# simulate a water resonance
+water_ideal <- sim_resonances(freq = 4.65, amp = 0.2, lw = 10)
+
+set.seed(3)
+water_phases <- c(0, runif(num_spec - 1, -180, 180))
+water_sig <- water_ideal %>% rep_dyn(num_spec) %>% phase(water_phases)
+
+# ideal unshifted data
+SNR <- 15
+sim_data_0 <- ideal_spec %>% rep_dyn(num_spec) %>% 
+  + sim_noise(1 / SNR, dyns = num_spec)
+
+# define frequency adjustments for shift only example
+shifts <- seq(0, 10, length.out = num_spec)
+
+sim_data_1 <- sim_data_0 %>% shift(shifts, units = "hz")
+
+set.seed(4)
+phases <- c(0, runif(num_spec - 1, -180, 180))
+sim_data_2 <- sim_data_1 %>% phase(phases)
+
+sim_data_3 <- sim_data_2 + water_sig
+
+# correct using rats
+rats_res <- rats(sim_data_3)
+
+# correct using td method
+td_res <- tdsr(sim_data_3)
+
+# create a dataframe of true and estimated shift values
+shifts_df <- data.frame(shifts, RATS = as.numeric(rats_res$shifts),
+                        TDSR = as.numeric(td_res$shifts))
+
+shifts_df <- melt(shifts_df, "shifts", variable.name = "Method",
+                  value.name = "estimate")
+
+shifts_df$err <- shifts_df$shifts - shifts_df$estimate
+
+shift_box <- ggboxplot(shifts_df, x = "Method", y = "err",
+                 ylab = "True frequency shift - estimate (hz)") + 
+                 theme(plot.margin = unit(c(2,1,1,2), "lines"))
+
+# create a dataframe of true and estimated phase values
+phase_df <- data.frame(phases, RATS = as.numeric(rats_res$phases),
+                 TDSR = as.numeric(td_res$phases))
+
+phase_df <- melt(phase_df, "phases", variable.name = "Method",
+                  value.name = "estimate")
+
+phase_df$err <- phase_df$phases - phase_df$estimate
+phase_df$err <- phase_df$err - round(phase_df$err / 180) * 180
+
+phase_box <- ggboxplot(phase_df, x = "Method", y = "err",
+                 ylab = "True phase - estimate (degrees)") + 
+                 theme(plot.margin = unit(c(2,1,1,2), "lines"))
+
+# FIGURE S1
+lw <- 0.35
+setEPS()
+postscript(file.path(fig_dir, "figure_s2.eps"), width = 6, height = 2.5)
 
 par(mfrow = c(1, 3))
-stackplot(sim_data_3, xlim = c(4, 0.5), y_offset = 0, restore_def_par = FALSE, 
-          lwd = lw)
+stackplot(sim_data_3, xlim = c(4, 0.5), y_offset = 0,
+          restore_def_par = FALSE, lwd = lw)
 
 mtext("a", at = 4, padj = 0.5, font = 2)
 
@@ -337,20 +410,57 @@ even_mean_corr_td <- tdsr(mean_even_td, mean_odd_td,
                                 xlim = c(2.2, 1.8))$corrected
 
 uncorr_ed <- append_dyns(odd_data, -even_data) %>% mean_dyns()
+uncorr_ed <- uncorr_ed * 2 # to maintain the same scaling as corrected data
 
 # subtract edited scan and apply line-broading and zero-filling
+
 rats_ed <- mean_odd_rats - even_mean_corr_rats
+rats_ed_orig <- rats_ed
 rats_ed <- rats_ed %>% lb(3.0) %>% zf(4)
 td_ed <- mean_odd_td - even_mean_corr_td
+td_ed_orig <- td_ed
 td_ed <- td_ed %>% lb(3.0) %>% zf(4)
+uncorr_ed_orig <- uncorr_ed
 uncorr_ed <- uncorr_ed %>% lb(3.0) %>% zf(4)
+
+################################################################################
+# GSH fitting (TARQUIN needs to be on the system path for this to work...)
+# version 4.3.11 used to generate paper results
+################################################################################
+
+gsh <- get_uncoupled_mol("GSH", 2.95, "1H", 1, 8, 0)
+p275 <- get_uncoupled_mol("P275", 2.74, "1H", 1, 2, 0)
+p270 <- get_uncoupled_mol("P270", 2.68, "1H", -1, 2, 0)
+p261 <- get_uncoupled_mol("P261", 2.62, "1H", 1, 2, 0)
+p259 <- get_uncoupled_mol("P259", 2.58, "1H", 1, 2, 0)
+p251 <- get_uncoupled_mol("P251", 2.51, "1H", -1, 2, 0)
+p245 <- get_uncoupled_mol("P245", 2.45, "1H", 1, 2, 0)
+p235 <- get_uncoupled_mol("P236", 2.37, "1H", 1, 2, 0)
+
+mol_list <- list(gsh, p275, p270, p261, p259, p251, p245, p235)
+
+basis <- sim_basis(mol_list)
+
+opts <- "--rescale_lcm_basis false --auto_ref false --auto_phase false --start_pnt 10 --max_iters 100"
+
+rats_ed_res <- fit_mrs(rats_ed_orig, method = "TARQUIN", basis = basis,
+                       opts = opts)
+
+td_ed_res <- fit_mrs(td_ed_orig, method = "TARQUIN", basis = basis, opts = opts)
+
+uncorr_ed_res <- fit_mrs(uncorr_ed_orig, method = "TARQUIN", basis = basis,
+                         opts = opts)
+
+print(uncorr_ed_res$res_tab$GSH / rats_ed_res$res_tab$GSH * 100)
+print(td_ed_res$res_tab$GSH / rats_ed_res$res_tab$GSH * 100)
 
 # FIGURE 5
 setEPS()
-postscript(file.path(fig_dir, "figure5.eps"), width = 8, height = 4)
+postscript(file.path(fig_dir, "figure5.eps"), width = 8, height = 8)
 
-# three part figure
-par(mfrow = c(1, 3))
+# six part figure
+par(mfrow = c(2, 3))
+mar <- c(3, 1.5, 1, 1)
 
 plot(uncorr_ed, xlim = c(4, 1.0), restore_def_par = FALSE)
 points(2, 0, cex = 10, col = "red")
@@ -363,9 +473,21 @@ mtext("b", at = 4, padj = 0.5, cex = 1.5, font = 2)
 plot(rats_ed, xlim = c(4, 1.0), restore_def_par = FALSE)
 points(2, 0, cex = 10, col = "red")
 mtext("c", at = 4, padj = 0.5, cex = 1.5, font = 2)
+
+plot(uncorr_ed_res, xlim = c(3.3,2), restore_def_par = FALSE, mar = mar)
+mtext("d", at = 3.37, padj = 0.9, cex = 1.5, font = 2)
+
+plot(td_ed_res, xlim = c(3.3,2), restore_def_par = FALSE, mar = mar)
+mtext("e", at = 3.37, padj = 0.9, cex = 1.5, font = 2)
+
+plot(rats_ed_res, xlim = c(3.3,2), restore_def_par = FALSE, mar = mar)
+mtext("f", at = 3.37, padj = 0.9, cex = 1.5, font = 2)
 dev.off()
 
+################################################################################
 # quick example to estimate the typical time needed to correct 128 averages
+################################################################################
+
 sim_data_0 <- ideal_spec %>% rep_dyn(128) %>% 
   + sim_noise(1 / (10), dyns = 128)
 
