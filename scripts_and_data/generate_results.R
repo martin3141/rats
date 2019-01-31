@@ -54,10 +54,10 @@ if (!exists("sim1") | force_sim1) {
     sim_data_1 <- sim_data_0 %>% shift(shifts, units = "hz")
     
     # correct using rats
-    rats_res <- rats(sim_data_1)
+    rats_res <- rats(sim_data_1, get_dyns(sim_data_1, 1))
     
     # correct using td method
-    td_res <- tdsr(sim_data_1)
+    td_res <- tdsr(sim_data_1, get_dyns(sim_data_1, 1))
     #td_res <- tdsr(sim_data_1, xlim = c(15, -5))
     
     # create a dataframe of true and estimated shift values for SNR = 5
@@ -135,10 +135,10 @@ if (!exists("sim2") | force_sim2) {
     sim_data_2 <- sim_data_1 %>% phase(phases)
     
     # correct using rats
-    rats_res <- rats(sim_data_2)
+    rats_res <- rats(sim_data_2, get_dyns(sim_data_2, 1))
     
     # correct using td method
-    td_res <- tdsr(sim_data_2)
+    td_res <- tdsr(sim_data_2, get_dyns(sim_data_2, 1))
     #td_res <- tdsr(sim_data_2, xlim = c(15, -5))
     
     rats_freq_sd[n]   <- sd(shifts - rats_res$shifts)
@@ -214,10 +214,10 @@ sim_data_2 <- sim_data_1 %>% phase(phases)
 sim_data_3 <- sim_data_2 + water_sig
 
 # correct using rats
-rats_res <- rats(sim_data_3)
+rats_res <- rats(sim_data_3, get_dyns(sim_data_3, 1))
 
 # correct using td method
-td_res <- tdsr(sim_data_3)
+td_res <- tdsr(sim_data_3, get_dyns(sim_data_3, 1))
 
 # create a dataframe of true and estimated shift values
 shifts_df <- data.frame(shifts, RATS = as.numeric(rats_res$shifts),
@@ -304,10 +304,10 @@ sim_data_2 <- sim_data_1 %>% phase(phases)
 sim_data_3 <- sim_data_2 + water_sig
 
 # correct using rats
-rats_res <- rats(sim_data_3)
+rats_res <- rats(sim_data_3, get_dyns(sim_data_3, 1))
 
 # correct using td method
-td_res <- tdsr(sim_data_3)
+td_res <- tdsr(sim_data_3, get_dyns(sim_data_3, 1))
 
 # create a dataframe of true and estimated shift values
 shifts_df <- data.frame(shifts, RATS = as.numeric(rats_res$shifts),
