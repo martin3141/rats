@@ -11,11 +11,11 @@
 
 ### On Linux or OSX
 
-'''
+```
 git clone https://github.com/martin3141/rats.git
 cd rats
 make
-'''
+```
 
 ### Other (without git or GNU make)
 
