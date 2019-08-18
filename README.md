@@ -1,6 +1,6 @@
 # Script and data to reproduce the results presented in the RATS paper - https://doi.org/10.1002/mrm.27605
 
-## Dependancies
+## Dependencies
 
 - R (all required packages will be automatically installed)
 - TARQUIN should be installed on the system path to generate Figure 5.
