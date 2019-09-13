@@ -1,13 +1,11 @@
+---
+title: "rats"
+---
+
+```{r, warning = FALSE}
 # install/load required R libraries
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(spant, reshape2, ggpubr)
-
-# change the working directory to the source file location
-# when "Sourcing" from the RStudio GUI
-if (Sys.getenv("RSTUDIO") == "1") {
-  this.dir <- dirname(parent.frame(2)$ofile)
-  setwd(this.dir)
-}
 
 # if figure dir doesn't exist, export plots to the current working dir
 fig_dir <- file.path(dirname(getwd()), "figures")
@@ -98,15 +96,14 @@ shift_scatter <- ggscatter(shifts_df_snr, x = "shifts", y = "estimate",
                  col = "Method", ylab = "Estimated frequency shift (Hz)",
                  xlab = "True frequency shift (Hz)", palette = "jco",
                  shape = 1) + geom_abline(col = "black")
+```
 
-# FIGURE 1
-setEPS()
-postscript(file.path(fig_dir, "figure1.eps"), width = 10, height = 3.5)
-fig1 <- ggarrange(freq, phase, shift_scatter, labels = "auto", 
-                  font.label = lab_font, ncol = 3)
-print(fig1)
-dev.off()
+```{r, Figure 1, fig.height = 3.5, fig.width = 10}
+ggarrange(freq, phase, shift_scatter, labels = "auto", font.label = lab_font,
+          ncol = 3)
+```
 
+```{r, warning = FALSE}
 ################################################################################
 # Frequency drift and random phase test
 ################################################################################
@@ -171,22 +168,18 @@ phase <- ggline(phase_df, "SNR", "error", color = "Method", palette = "jco",
 
 lab_font <- list(size = 20, color = "black",
                  face = "bold", family = NULL)
+```
 
-# FIGURE 2
-setEPS()
-postscript(file.path(fig_dir, "figure2.eps"), width = 6.67, height = 3.5)
-fig2 <- ggarrange(freq, phase, labels = "auto", 
-                  font.label = lab_font, ncol = 2)
-print(fig2)
-dev.off()
+```{r, Figure 2, fig.height = 3.5, fig.width = 6.67}
+ggarrange(freq, phase, labels = "auto", font.label = lab_font, ncol = 2)
+```
 
-# FIGURE S1
-setEPS()
-postscript(file.path(fig_dir, "figure_s1.eps"), width = 6.0, height = 9.0)
+```{r, Figure s1, fig.height = 9.0, fig.width = 6.0}
 stackplot(get_dyns(sim_data_2, seq(from = 1, to = num_spec, by = 64)),
           xlim = c(4, 0.5), y_offset = 210)
-dev.off()
+```
 
+```{r, warning = FALSE}
 ################################################################################
 # Unstable residual water test
 ################################################################################
@@ -246,20 +239,15 @@ phase_df$err <- phase_df$err - round(phase_df$err / 180) * 180
 phase_box <- ggboxplot(phase_df, x = "Method", y = "err",
                        ylab = "True phase - estimate (degrees)") + 
                        theme(plot.margin = unit(c(2,1,1,2), "lines"))
+```
 
-# FIGURE 3
-setEPS()
-postscript(file.path(fig_dir, "figure3.eps"), width = 8, height = 4)
-fig3 <- ggarrange(shift_box, phase_box, labels = "auto", font.label = lab_font)
-print(fig3)
-dev.off()
+```{r, Figure 3, fig.height = 4.0, fig.width = 8.0}
+ggarrange(shift_box, phase_box, labels = "auto", font.label = lab_font)
+```
 
-# FIGURE 4
+```{r, Figure 4, fig.height = 2.5, fig.width = 6.0}
 lw <- 0.35
 subset <- seq(from = 1, to = 512, length.out = 32)
-setEPS()
-postscript(file.path(fig_dir, "figure4.eps"), width = 6, height = 2.5)
-
 par(mfrow = c(1, 3))
 stackplot(get_dyns(sim_data_3, subset), xlim = c(4, 0.5), y_offset = 0,
           restore_def_par = FALSE, lwd = lw)
@@ -275,8 +263,9 @@ stackplot(get_dyns(rats_res$corrected, subset), xlim = c(4, 0.5), y_offset = 0,
           restore_def_par = FALSE, lwd = lw)
 
 mtext("c", at = 4, padj = 0.5, font = 2)
-dev.off()
+```
 
+```{r, warning = FALSE}
 # moderate baseline issue
 
 num_spec <- 32
@@ -337,11 +326,10 @@ phase_box <- ggboxplot(phase_df, x = "Method", y = "err",
                  ylab = "True phase - estimate (degrees)") + 
                  theme(plot.margin = unit(c(2,1,1,2), "lines"))
 
-# FIGURE S2
 lw <- 0.35
-setEPS()
-postscript(file.path(fig_dir, "figure_s2.eps"), width = 6, height = 2.5)
+```
 
+```{r, Figure S2, fig.height = 2.5, fig.width = 6.0}
 par(mfrow = c(1, 3))
 stackplot(sim_data_3, xlim = c(4, 0.5), y_offset = 0,
           restore_def_par = FALSE, lwd = lw)
@@ -357,152 +345,4 @@ stackplot(rats_res$corrected, xlim = c(4, 0.5), y_offset = 0,
           restore_def_par = FALSE, lwd = lw)
 
 mtext("c", at = 4, padj = 0.5, font = 2)
-dev.off()
-
-################################################################################
-# GSH MEGA-PRESS example pipeline
-################################################################################
-
-# load raw_data object
-load("gsh_mpress_data.Rda")
-
-# assume all edit off scans make up the first half of the dynamics followed
-# by the edit on scans
-proc <- interleave_dyns(raw_data)
-
-# split ed-on ed-off data
-odd_data <- get_odd_dyns(proc)
-even_data <- -get_even_dyns(proc) # undo the phase flip
-median_spec <- median_dyns(append_dyns(odd_data, even_data))
-
-# find the scan closest to the median
-median_odd <-  median_dyns(odd_data)
-median_even <- median_dyns(even_data)
-odd_diff <- odd_data - rep_dyn(median_odd, Ndyns(odd_data))
-even_diff <- even_data - rep_dyn(median_even, Ndyns(even_data))
-odd_min <- which.min(int_spec(odd_diff, xlim = c(4, 0.5), mode = "mod"))
-even_min <- which.min(int_spec(even_diff, xlim = c(4, 0.5), mode = "mod"))
-odd_ref <- get_dyns(odd_data, odd_min)
-even_ref <- get_dyns(even_data, even_min)
-
-# align data to the dynamic closest to the median scans (rats)
-odd_data_rats_corr_res <-  rats(odd_data,  odd_ref)
-even_data_rats_corr_res <- rats(even_data, even_ref)
-odd_data_rats_corr <- odd_data_rats_corr_res$corrected
-even_data_rats_corr <- even_data_rats_corr_res$corrected
-
-# calcuate the mean of the corrected data (rats)
-mean_even_rats <- mean_dyns(even_data_rats_corr)
-mean_odd_rats  <- mean_dyns(odd_data_rats_corr)
-
-# align data to the dynamics closest to the median scans (tdsr)
-odd_data_td_corr_res <-  tdsr(odd_data,  odd_ref)
-even_data_td_corr_res <- tdsr(even_data, even_ref)
-odd_data_td_corr <- odd_data_td_corr_res$corrected
-even_data_td_corr <- even_data_td_corr_res$corrected
-
-# calcuate the mean of the corrected data (tdsr)
-mean_even_td <- mean_dyns(even_data_td_corr)
-mean_odd_td  <- mean_dyns(odd_data_td_corr)
-
-even_mean_corr_rats <- rats(mean_even_rats, mean_odd_rats,
-                            xlim = c(2.2, 1.8))$corrected
-
-even_mean_corr_td <- tdsr(mean_even_td, mean_odd_td,
-                          xlim = c(2.2, 1.8))$corrected
-
-uncorr_ed <- append_dyns(odd_data, -even_data) %>% mean_dyns()
-uncorr_ed <- uncorr_ed * 2 # to maintain the same scaling as corrected data
-
-# subtract edited scan and apply line-broading and zero-filling
-
-rats_ed <- mean_odd_rats - even_mean_corr_rats
-rats_ed_orig <- rats_ed
-rats_ed <- rats_ed %>% lb(3.0) %>% zf(4)
-td_ed <- mean_odd_td - even_mean_corr_td
-td_ed_orig <- td_ed
-td_ed <- td_ed %>% lb(3.0) %>% zf(4)
-uncorr_ed_orig <- uncorr_ed
-uncorr_ed <- uncorr_ed %>% lb(3.0) %>% zf(4)
-
-################################################################################
-# GSH fitting (TARQUIN needs to be on the system path for this to work...)
-# version 4.3.11 used to generate paper results
-################################################################################
-
-# change below to correct path
-set_tqn_cmd("~/src/tarquin/src/build/redist/tarquin")
-
-gsh <- get_uncoupled_mol("GSH", 2.95, "1H", 1, 8, 0)
-p275 <- get_uncoupled_mol("P275", 2.74, "1H", 1, 2, 0)
-p270 <- get_uncoupled_mol("P270", 2.68, "1H", -1, 2, 0)
-p261 <- get_uncoupled_mol("P261", 2.62, "1H", 1, 2, 0)
-p259 <- get_uncoupled_mol("P259", 2.58, "1H", 1, 2, 0)
-p251 <- get_uncoupled_mol("P251", 2.51, "1H", -1, 2, 0)
-p245 <- get_uncoupled_mol("P245", 2.45, "1H", 1, 2, 0)
-p235 <- get_uncoupled_mol("P236", 2.37, "1H", 1, 2, 0)
-
-mol_list <- list(gsh, p275, p270, p261, p259, p251, p245, p235)
-
-basis <- sim_basis(mol_list)
-
-opts <- paste("--rescale_lcm_basis false --auto_ref false --auto_phase false",
-              " --start_pnt 10 --max_iters 100", sep = "")
-
-rats_ed_res <- fit_mrs(rats_ed_orig, method = "TARQUIN", basis = basis,
-                       opts = opts)
-
-td_ed_res <- fit_mrs(td_ed_orig, method = "TARQUIN", basis = basis, opts = opts)
-
-uncorr_ed_res <- fit_mrs(uncorr_ed_orig, method = "TARQUIN", basis = basis,
-                         opts = opts)
-
-print(uncorr_ed_res$res_tab$GSH / rats_ed_res$res_tab$GSH * 100)
-print(td_ed_res$res_tab$GSH / rats_ed_res$res_tab$GSH * 100)
-
-# FIGURE 5
-setEPS()
-postscript(file.path(fig_dir, "figure5.eps"), width = 8, height = 8)
-
-# six part figure
-par(mfrow = c(2, 3))
-mar <- c(3, 1.5, 1, 1)
-
-plot(uncorr_ed, xlim = c(4, 1.0), restore_def_par = FALSE)
-points(2, 0, cex = 10, col = "red")
-mtext("a", at = 4, padj = 0.5, cex = 1.5, font = 2)
-
-plot(td_ed, xlim = c(4, 1.0), restore_def_par = FALSE)
-points(2, 0, cex = 10, col = "red")
-mtext("b", at = 4, padj = 0.5, cex = 1.5, font = 2)
-
-plot(rats_ed, xlim = c(4, 1.0), restore_def_par = FALSE)
-points(2, 0, cex = 10, col = "red")
-mtext("c", at = 4, padj = 0.5, cex = 1.5, font = 2)
-
-plot(uncorr_ed_res, xlim = c(3.3,2), restore_def_par = FALSE, mar = mar)
-mtext("d", at = 3.37, padj = 0.9, cex = 1.5, font = 2)
-
-plot(td_ed_res, xlim = c(3.3,2), restore_def_par = FALSE, mar = mar)
-mtext("e", at = 3.37, padj = 0.9, cex = 1.5, font = 2)
-
-plot(rats_ed_res, xlim = c(3.3,2), restore_def_par = FALSE, mar = mar)
-mtext("f", at = 3.37, padj = 0.9, cex = 1.5, font = 2)
-dev.off()
-
-################################################################################
-# quick example to estimate the typical time needed to correct 128 averages
-################################################################################
-
-sim_data_0 <- ideal_spec %>% rep_dyn(128) %>% + sim_noise(1 / (10), dyns = 128)
-
-# define frequency adjustments for shift only example
-shifts <- seq(0, 10, length.out = 128)
-
-sim_data_1 <- sim_data_0 %>% shift(shifts, units = "hz")
-
-# correct using rats
-system.time(rats(sim_data_1))
-
-# correct using td method
-system.time(tdsr(sim_data_1))
+```
