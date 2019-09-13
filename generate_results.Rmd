@@ -3,13 +3,9 @@ title: "rats"
 ---
 
 ```{r, warning = FALSE}
-# install/load required R libraries
-if (!require("pacman")) install.packages("pacman")
-pacman::p_load(spant, reshape2, ggpubr)
-
-# if figure dir doesn't exist, export plots to the current working dir
-fig_dir <- file.path(dirname(getwd()), "figures")
-if (!file.exists(fig_dir)) fig_dir <- getwd()
+library(spant)
+library(reshape2)
+library(ggpubr)
 
 # ggplot2 theme
 theme_set(theme_bw())
