@@ -1,5 +1,4 @@
 install.packages("devtools")
 devtools::install_github("martin3141/spant")
-devtools::install_github("wilkelab/cowplot")
 install.packages("reshape2")
 install.packages("ggpubr")
