@@ -46,7 +46,7 @@ if (!exists("sim1") | force_sim1) {
   for (n in 1:runs) {
     # ideal unshifted data
     sim_data_0 <- ideal_spec %>% rep_dyn(num_spec) %>% 
-      + sim_noise(1 / (SNRS[n]), dyns = num_spec)
+                  + sim_noise(1 / (SNRS[n]), dyns = num_spec)
     
     # define frequency adjustments for shift only example
     shifts <- seq(0, 10, length.out = num_spec)
@@ -58,24 +58,23 @@ if (!exists("sim1") | force_sim1) {
     
     # correct using td method
     td_res <- tdsr(sim_data_1, get_dyns(sim_data_1, 1))
-    #td_res <- tdsr(sim_data_1, xlim = c(15, -5))
     
     # create a dataframe of true and estimated shift values for SNR = 5
     if (n == 2) {
       shifts_df_snr <- data.frame(shifts, RATS = as.numeric(rats_res$shifts),
-                              TDSR = as.numeric(td_res$shifts))
+                                  TDSR = as.numeric(td_res$shifts))
     
       shifts_df_snr <- melt(shifts_df_snr, "shifts", variable.name = "Method",
-                        value.name = "estimate")
+                            value.name = "estimate")
     
       shifts_df_snr$err <- shifts_df_snr$shifts - shifts_df_snr$estimate
     }
    
-    rats_freq_sd[n]   <- sd(shifts - rats_res$shifts)
-    td_freq_sd[n] <- sd(shifts - td_res$shifts)
+    rats_freq_sd[n] <- sd(shifts - rats_res$shifts)
+    td_freq_sd[n]   <- sd(shifts - td_res$shifts)
     
-    rats_phase_sd[n]   <- sd(rats_res$phases)
-    td_phase_sd[n] <- sd(td_res$phases)
+    rats_phase_sd[n] <- sd(rats_res$phases)
+    td_phase_sd[n]   <- sd(td_res$phases)
   }
 }
 
@@ -83,7 +82,8 @@ freq_df <- data.frame(SNR = SNRS, RATS = rats_freq_sd, TDSR = td_freq_sd)
 freq_df <- melt(freq_df, "SNR", variable.name = "Method", value.name = "error")
 
 phase_df <- data.frame(SNR = SNRS, RATS = rats_phase_sd, TDSR = td_phase_sd)
-phase_df <- melt(phase_df, "SNR", variable.name = "Method", value.name = "error")
+phase_df <- melt(phase_df, "SNR", variable.name = "Method",
+                 value.name = "error")
 
 freq <- ggline(freq_df, "SNR", "error", color = "Method", palette = "jco",
        ylab = "Frequency error (Hz)", numeric.x.axis = T) 
@@ -94,11 +94,10 @@ phase <- ggline(phase_df, "SNR", "error", color = "Method", palette = "jco",
 lab_font <- list(size = 20, color = "black",
                  face = "bold", family = NULL)
 
-
 shift_scatter <- ggscatter(shifts_df_snr, x = "shifts", y = "estimate",
                  col = "Method", ylab = "Estimated frequency shift (Hz)",
-                 xlab = "True frequency shift (Hz)", palette = "jco", shape = 1) +
-                 geom_abline(col = "black")
+                 xlab = "True frequency shift (Hz)", palette = "jco",
+                 shape = 1) + geom_abline(col = "black")
 
 # FIGURE 1
 setEPS()
@@ -139,17 +138,18 @@ if (!exists("sim2") | force_sim2) {
     
     # correct using td method
     td_res <- tdsr(sim_data_2, get_dyns(sim_data_2, 1))
-    #td_res <- tdsr(sim_data_2, xlim = c(15, -5))
     
     rats_freq_sd[n]   <- sd(shifts - rats_res$shifts)
     td_freq_sd[n] <- sd(shifts - td_res$shifts)
     
     rats_phase_err <- phases - rats_res$phases
+    
     # correct for multiples of 2pi
     rats_phase_err <- rats_phase_err - round(rats_phase_err / 180) * 180
     rats_phase_sd[n]   <- sd(rats_phase_err)
     
     td_phase_err <- phases - td_res$phases
+    
     # correct for multiples of 2pi
     td_phase_err <- td_phase_err - round(td_phase_err / 180) * 180
     td_phase_sd[n] <- sd(td_phase_err)
@@ -160,7 +160,8 @@ freq_df <- data.frame(SNR = SNRS, RATS = rats_freq_sd, TDSR = td_freq_sd)
 freq_df <- melt(freq_df, "SNR", variable.name = "Method", value.name = "error")
 
 phase_df <- data.frame(SNR = SNRS, RATS = rats_phase_sd, TDSR = td_phase_sd)
-phase_df <- melt(phase_df, "SNR", variable.name = "Method", value.name = "error")
+phase_df <- melt(phase_df, "SNR", variable.name = "Method",
+                 value.name = "error")
 
 freq <- ggline(freq_df, "SNR", "error", color = "Method", palette = "jco",
        ylab = "Frequency error (Hz)", numeric.x.axis = T) 
@@ -200,7 +201,7 @@ water_sig <- water_ideal %>% rep_dyn(num_spec) %>% phase(water_phases)
 # ideal unshifted data
 SNR <- 15
 sim_data_0 <- ideal_spec %>% rep_dyn(num_spec) %>% 
-  + sim_noise(1 / SNR, dyns = num_spec)
+              + sim_noise(1 / SNR, dyns = num_spec)
 
 # define frequency adjustments for shift only example
 shifts <- seq(0, 10, length.out = num_spec)
@@ -229,22 +230,22 @@ shifts_df <- melt(shifts_df, "shifts", variable.name = "Method",
 shifts_df$err <- shifts_df$shifts - shifts_df$estimate
 
 shift_box <- ggboxplot(shifts_df, x = "Method", y = "err",
-                 ylab = "True frequency shift - estimate (hz)") + 
-                 theme(plot.margin = unit(c(2,1,1,2), "lines"))
+                       ylab = "True frequency shift - estimate (hz)") + 
+                       theme(plot.margin = unit(c(2,1,1,2), "lines"))
 
 # create a dataframe of true and estimated phase values
 phase_df <- data.frame(phases, RATS = as.numeric(rats_res$phases),
-                 TDSR = as.numeric(td_res$phases))
+                       TDSR = as.numeric(td_res$phases))
 
 phase_df <- melt(phase_df, "phases", variable.name = "Method",
-                  value.name = "estimate")
+                 value.name = "estimate")
 
 phase_df$err <- phase_df$phases - phase_df$estimate
 phase_df$err <- phase_df$err - round(phase_df$err / 180) * 180
 
 phase_box <- ggboxplot(phase_df, x = "Method", y = "err",
-                 ylab = "True phase - estimate (degrees)") + 
-                 theme(plot.margin = unit(c(2,1,1,2), "lines"))
+                       ylab = "True phase - estimate (degrees)") + 
+                       theme(plot.margin = unit(c(2,1,1,2), "lines"))
 
 # FIGURE 3
 setEPS()
@@ -290,7 +291,7 @@ water_sig <- water_ideal %>% rep_dyn(num_spec) %>% phase(water_phases)
 # ideal unshifted data
 SNR <- 15
 sim_data_0 <- ideal_spec %>% rep_dyn(num_spec) %>% 
-  + sim_noise(1 / SNR, dyns = num_spec)
+              + sim_noise(1 / SNR, dyns = num_spec)
 
 # define frequency adjustments for shift only example
 shifts <- seq(0, 10, length.out = num_spec)
@@ -377,8 +378,8 @@ median_spec <- median_dyns(append_dyns(odd_data, even_data))
 # find the scan closest to the median
 median_odd <-  median_dyns(odd_data)
 median_even <- median_dyns(even_data)
-odd_diff <- odd_data - rep_dyn(median_odd, dyns(odd_data))
-even_diff <- even_data - rep_dyn(median_even, dyns(even_data))
+odd_diff <- odd_data - rep_dyn(median_odd, Ndyns(odd_data))
+even_diff <- even_data - rep_dyn(median_even, Ndyns(even_data))
 odd_min <- which.min(int_spec(odd_diff, xlim = c(4, 0.5), mode = "mod"))
 even_min <- which.min(int_spec(even_diff, xlim = c(4, 0.5), mode = "mod"))
 odd_ref <- get_dyns(odd_data, odd_min)
@@ -404,10 +405,11 @@ even_data_td_corr <- even_data_td_corr_res$corrected
 mean_even_td <- mean_dyns(even_data_td_corr)
 mean_odd_td  <- mean_dyns(odd_data_td_corr)
 
-# even_mean_corr_rats <- rats(mean_even_rats, mean_odd_rats, xlim = c(2.2, 1.8), p_deg = -1)$corrected
-even_mean_corr_rats <- rats(mean_even_rats, mean_odd_rats, xlim = c(2.2, 1.8))$corrected
+even_mean_corr_rats <- rats(mean_even_rats, mean_odd_rats,
+                            xlim = c(2.2, 1.8))$corrected
+
 even_mean_corr_td <- tdsr(mean_even_td, mean_odd_td,
-                                xlim = c(2.2, 1.8))$corrected
+                          xlim = c(2.2, 1.8))$corrected
 
 uncorr_ed <- append_dyns(odd_data, -even_data) %>% mean_dyns()
 uncorr_ed <- uncorr_ed * 2 # to maintain the same scaling as corrected data
@@ -428,6 +430,9 @@ uncorr_ed <- uncorr_ed %>% lb(3.0) %>% zf(4)
 # version 4.3.11 used to generate paper results
 ################################################################################
 
+# change below to correct path
+set_tqn_cmd("~/src/tarquin/src/build/redist/tarquin")
+
 gsh <- get_uncoupled_mol("GSH", 2.95, "1H", 1, 8, 0)
 p275 <- get_uncoupled_mol("P275", 2.74, "1H", 1, 2, 0)
 p270 <- get_uncoupled_mol("P270", 2.68, "1H", -1, 2, 0)
@@ -441,7 +446,8 @@ mol_list <- list(gsh, p275, p270, p261, p259, p251, p245, p235)
 
 basis <- sim_basis(mol_list)
 
-opts <- "--rescale_lcm_basis false --auto_ref false --auto_phase false --start_pnt 10 --max_iters 100"
+opts <- paste("--rescale_lcm_basis false --auto_ref false --auto_phase false",
+              " --start_pnt 10 --max_iters 100", sep = "")
 
 rats_ed_res <- fit_mrs(rats_ed_orig, method = "TARQUIN", basis = basis,
                        opts = opts)
@@ -488,8 +494,7 @@ dev.off()
 # quick example to estimate the typical time needed to correct 128 averages
 ################################################################################
 
-sim_data_0 <- ideal_spec %>% rep_dyn(128) %>% 
-  + sim_noise(1 / (10), dyns = 128)
+sim_data_0 <- ideal_spec %>% rep_dyn(128) %>% + sim_noise(1 / (10), dyns = 128)
 
 # define frequency adjustments for shift only example
 shifts <- seq(0, 10, length.out = 128)
