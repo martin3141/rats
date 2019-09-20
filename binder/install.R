@@ -1,5 +1,3 @@
-Sys.setenv(DISPLAY = ":99.0")
-install.packages("devtools")
-devtools::install_github("martin3141/spant")
+install.packages("spant")
 install.packages("ggpubr")
 install.packages("reshape2")
