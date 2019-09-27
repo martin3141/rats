@@ -1,5 +1,5 @@
 #!/bin/bash
 
-export DISPLAY=:99.0
+# export DISPLAY=:99.0
 
 exec "$@"
